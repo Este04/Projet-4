@@ -92,9 +92,7 @@ def sweep(t, t0, f0, t1, f1, Fmax):
 		
 	:return Fext: the value of the sweep function.
     """
-    # Write your code here
-    # TODO
-    ft = f0 + ((f1 - f0)  / (t1 - t0))
+    returnFext = sin(2*pi*t*(f0+((f1-f0)/(t1-t0))*(t/2)))
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *    
 def compute_derivatives(t, y, data):

@@ -113,7 +113,20 @@ def compute_derivatives(t, y, data):
         :param data: the MBSData object containing the parameters of the model
     """                 
     # Write your code here
-    # TODO   
+    Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    new_y = np.zeros(y.shape)
+    new_y[0] = y[2]
+    new_y[1] = y[3]
+    new_y[2] = (-Fext - data.g * data.m1
+                + data.k01 * (y[0] - data.z01 ) - data.k02 * (y[1] - data.z02)
+                - data.d1 * y[2] + data.d2 * y[3]
+                ) / data.m1
+    new_y[3] = (Fext - data.g * data.m2
+                - data.k02 * (y[1] - data.z02)
+                - data.d2 * y[3] - data.m1 * y[2]
+                ) / data.m2
+
+    return new_y 
     # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
 
 

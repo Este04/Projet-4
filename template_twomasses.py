@@ -115,6 +115,21 @@ def compute_derivatives(t, y, data):
     # Write your code here
     # TODO   
     # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+
+    yd = np.zeros(4)
+    yd[0] = y[2]
+    yd[1] = y[3]
+    
+    A = np.array([[data.m1 + data.m2, data.m2], [data.m2, data.m2]])
+    C = np.array([[data.d1, 0], [0, data.d2]])
+    K = np.array([[data.k01, 0], [0, data.k02]])
+    D = np.array([[-data.g*(data.m1+data.m2)], [-data.g*data.m2 - Fext]])
+
+    B = D - K@y[0:2] - C@y[2:4]
+    yd[2:4] = np.linalg.solve(A, B).flatten()
+
+
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

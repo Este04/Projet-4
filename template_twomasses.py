@@ -8,6 +8,7 @@
 
 
 # import useful modules and functions
+import matplotlib.pyplot as plt
 from math import sin, cos, pi
 import numpy as np
 from scipy.integrate import solve_ivp
@@ -92,7 +93,7 @@ def sweep(t, t0, f0, t1, f1, Fmax):
 		
 	:return Fext: the value of the sweep function.
     """
-    returnFext = sin(2*pi*t*(f0+((f1-f0)/(t1-t0))*(t/2)))
+    return Fmax*sin(2*pi*t*(f0+((f1-f0)/(t1-t0))*(t/2)))
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *    
 def compute_derivatives(t, y, data):
@@ -116,7 +117,6 @@ def compute_derivatives(t, y, data):
     # TODO   
     # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
     Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
-
     yd = np.zeros(4)
     yd[0] = y[2]
     yd[1] = y[3]
@@ -124,11 +124,12 @@ def compute_derivatives(t, y, data):
     A = np.array([[data.m1 + data.m2, data.m2], [data.m2, data.m2]])
     C = np.array([[data.d1, 0], [0, data.d2]])
     K = np.array([[data.k01, 0], [0, data.k02]])
-    D = np.array([[-data.g*(data.m1+data.m2)], [-data.g*data.m2 - Fext]])
+    D = np.array([-data.g*(data.m1+data.m2), -data.g*data.m2 - Fext])
 
     B = D - K@y[0:2] - C@y[2:4]
-    yd[2:4] = np.linalg.solve(A, B).flatten()
+    yd[2:4] = np.linalg.solve(A, B)
 
+    return yd
 
 
 
@@ -143,8 +144,6 @@ def compute_dynamic_response(data):
  
        :param data: the MBSData object containing the parameters of the model
      """
-    # Write your code here
-    # TODO
     # ### Runge Kutta ###   should be called via solve_ivp()
     # to pass the MBSData object to compute_derivative function in solve_ivp, you may use lambda mechanism:
     #
@@ -156,6 +155,19 @@ def compute_dynamic_response(data):
     #
     # Write some code here
     # TODO
+
+    fprime = lambda t,y: compute_derivatives(t, y, data)
+    t_span = [data.t0, data.t1]
+    y0 = [data.q1, data.q2, 0, 0]
+    sol = solve_ivp(fprime, t_span, y0, t_eval=np.linspace(data.t0, data.t1, 1000), method='RK45')
+    q1 = sol.y[0]
+    q2 = sol.y[1]  
+    plt.plot(sol.t, q1, label='q1')
+    plt.plot(sol.t, q2, label='q2')
+    plt.show()
+
+
+
   
 
 
@@ -164,5 +176,4 @@ def compute_dynamic_response(data):
 
 if __name__ == '__main__':
     mbs_data = MBSData()
-    
     compute_dynamic_response(mbs_data)  

@@ -128,8 +128,10 @@ def compute_dynamic_response(data):
  
        :param data: the MBSData object containing the parameters of the model
      """
-    # Write your code here
-    # TODO
+    dirdyn_q = open('dirdyn_q.res', 'w')
+    dirdyn_qd = open('dirdyn_qd.res', 'w')
+    dirdyn_qdd = open('dirdyn_qdd.res', 'w')
+
     # ### Runge Kutta ###   should be called via solve_ivp()
     # to pass the MBSData object to compute_derivative function in solve_ivp, you may use lambda mechanism:
     #
@@ -139,8 +141,13 @@ def compute_dynamic_response(data):
     # this fprime function can be provided to solve_ivp
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
-    # Write some code here
-    # TODO
+
+    answer = solve_ivp(lambda t, y: compute_derivatives(t, y, data), [data.t0, data.t1], [data.q1, data.q2, 0, 0], t_eval=np.linspace(data.t0, data.t1, 1000))
+
+    for i in range(len(answer[0])):
+        dirdyn_q.write(f"{answer[0][i]} {answer[1][i]}\n")
+        dirdyn_qd.write(f"{answer[0][i]} {answer[2][i]}\n")
+        dirdyn_qdd.write(f"{answer[0][i]} {answer[3][i]}\n")
   
 
 

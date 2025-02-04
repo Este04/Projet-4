@@ -141,6 +141,7 @@ def compute_dynamic_response(data):
  
        :param data: the MBSData object containing the parameters of the model
      """
+    
     dirdyn_q = open('dirdyn_q.res', 'w')
     dirdyn_qd = open('dirdyn_qd.res', 'w')
     dirdyn_qdd = open('dirdyn_qdd.res', 'w')
@@ -155,12 +156,18 @@ def compute_dynamic_response(data):
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
 
-    answer = solve_ivp(lambda t, y: compute_derivatives(t, y, data), [data.t0, data.t1], [data.q1, data.q2, 0, 0], t_eval=np.linspace(data.t0, data.t1, 1000))
+    fprime = lambda t, y: compute_derivatives(t, y, data)
+    sol = solve_ivp(fprime, [data.t0, data.t1], [data.q1, data.q2, 0, 0], t_eval=np.linspace(data.t0, data.t1, 1000))
 
-    for i in range(len(answer[0])):
-        dirdyn_q.write(f"{answer[0][i]} {answer[1][i]}\n")
-        dirdyn_qd.write(f"{answer[0][i]} {answer[2][i]}\n")
-        dirdyn_qdd.write(f"{answer[0][i]} {answer[3][i]}\n")
+    time = sol.t
+    q = sol.y[0]
+    qd = sol.y[1]
+    qdd = [0 for _ in range(len(time))]
+
+    for i in range(len(time)):
+        dirdyn_q.write(f"{time[i]} {q[i]}\n")
+        dirdyn_qd.write(f"{time[i]} {qd[i]}\n")
+        dirdyn_qdd.write(f"{time[i]} {qdd[i]}\n")
   
 
 

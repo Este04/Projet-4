@@ -158,23 +158,24 @@ def compute_dynamic_response(data):
     # this fprime function can be provided to solve_ivp
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
-    # Write some code here
-    # TODO
-
     fprime = lambda t,y: compute_derivatives(t, y, data)
     t_span = [data.t0, data.t1]
     y0 = [data.q1, data.q2, 0, 0]
-    #y0 = [0.2, 0.2, 0, 0]
     sol = solve_ivp(fprime, t_span, y0, t_eval=np.linspace(data.t0, data.t1, 1000), method='RK45')
 
     # Get ydd
     ydd = np.zeros((2, len(sol.t)))
     for i in range(len(sol.t)): ydd[:,i] = compute_derivatives(sol.t[i], sol.y[:,i], data)[2:4]
 
-    # Save the results to text files
+    # Save the results into text files
     np.savetxt('dirdyn_q.res', np.vstack((sol.t, sol.y[0], sol.y[1])).T)
     np.savetxt('dirdyn_qd.res', np.vstack((sol.t, sol.y[2], sol.y[3])).T)
     np.savetxt('dirdyn_qdd.res', np.vstack((sol.t, ydd[0], ydd[1])).T)
+
+    plot(sol)
+
+
+def plot(sol):
 
     # Extract the reference solution
     with open("dirdyn_positions_ref.res",'r') as f:
@@ -195,8 +196,6 @@ def compute_dynamic_response(data):
     plt.title('Displacement of the two masses')
     plt.grid()
     plt.show()
-
-
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *

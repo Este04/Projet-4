@@ -96,15 +96,6 @@ def sweep(t, t0, f0, t1, f1, Fmax):
     #return 0
     return Fmax * sin(2*pi*t * (f0 + (f1-f0)/(t1-t0) * (t/2)))
     
-def two_masses_system(t, y , data):
-    Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
-    A = np.array([[data.m1 + data.m2, data.m2], [data.m2, data.m2]])
-    D = np.array([[data.d1, 0], [0, data.d2]])
-    K = np.array([[data.k01, 0], [0, data.k02]])
-    F = np.array([-data.g*(data.m1+data.m2)-Fext, -data.g*data.m2 - Fext])
-    z0 = np.array([data.z01, data.z02])
-    b = F + K@z0 - K@y[0:2] - D@y[2:4]
-    return np.linalg.solve(A, b)
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 def compute_derivatives(t, y, data):
@@ -127,10 +118,21 @@ def compute_derivatives(t, y, data):
     # Write your code here
     # TODO   
     # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+
+    # Two masses system
+    Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    A = np.array([[data.m1 + data.m2, data.m2], [data.m2, data.m2]])
+    D = np.array([[data.d1, 0], [0, data.d2]])
+    K = np.array([[data.k01, 0], [0, data.k02]])
+    F = np.array([-data.g*(data.m1+data.m2)-Fext, -data.g*data.m2 - Fext])
+    z0 = np.array([data.z01, data.z02])
+    b = F + K@z0 - K@y[0:2] - D@y[2:4]
+    x = np.linalg.solve(A, b)
+
     yd = np.zeros(4)
     yd[0] = y[2]
     yd[1] = y[3]
-    yd[2:4] = two_masses_system(t, y, data)
+    yd[2:4] = x
 
     return yd
     
@@ -167,7 +169,7 @@ def compute_dynamic_response(data):
 
     # Get ydd
     ydd = np.zeros((2, len(sol.t)))
-    for i in range(len(sol.t)): ydd[:,i] = two_masses_system(sol.t[i], sol.y[:,i], data)
+    for i in range(len(sol.t)): ydd[:,i] = compute_derivatives(sol.t[i], sol.y[:,i], data)[2:4]
 
     # Save the results to text files
     np.savetxt('dirdyn_q.res', np.vstack((sol.t, sol.y[0], sol.y[1])).T)

@@ -98,8 +98,9 @@ def sweep(t, t0, f0, t1, f1, Fmax):
     
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-def compute_derivatives(t, y, data):
-    """ Compute the derivatives yd for a given state y of the system.
+
+def compute_derivatives_1(t, y, data):
+    """ Compute the derivatives yd for a given state y of the system without external forces.
         The derivatives are computed at the given time t with
         the parameters values in the given data structure.
         
@@ -115,9 +116,40 @@ def compute_derivatives(t, y, data):
         :return: yd a numpy array containing the states derivatives  yd = [qd1, qd2, qdd1, qdd2]
         :param data: the MBSData object containing the parameters of the model
     """                 
-    # Write your code here
-    # TODO   
-    # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    # Two masses system
+    Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    A = np.array([[data.m1 + data.m2, data.m2], [data.m2, data.m2]])
+    D = np.array([[data.d1, 0], [0, data.d2]])
+    K = np.array([[data.k01, 0], [0, data.k02]])
+    F = np.array([-data.g*(data.m1+data.m2), -data.g*data.m2])
+    z0 = np.array([data.z01, data.z02])
+    b = F + K@z0 - K@y[0:2] - D@y[2:4]
+    x = np.linalg.solve(A, b)
+
+    yd = np.zeros(4)
+    yd[0] = y[2]
+    yd[1] = y[3]
+    yd[2:4] = x
+
+    return yd
+
+def compute_derivatives_2(t, y, data):
+    """ Compute the derivatives yd for a given state y of the system with external force.
+        The derivatives are computed at the given time t with
+        the parameters values in the given data structure.
+        
+        It is assumed that the state vector y contains the following states:
+          y = [q1, q2, qd1, qd2] with:
+             - q1: the mass 1 position
+             - q2: the mass 2 position 
+             - qd1: the mass 1 velocity
+             - qd2: the mass 2 velocity 
+
+        :param  t: the time instant when to compute the derivatives.
+        :param  y: the numpy array containing the states 
+        :return: yd a numpy array containing the states derivatives  yd = [qd1, qd2, qdd1, qdd2]
+        :param data: the MBSData object containing the parameters of the model
+    """                 
 
     # Two masses system
     Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
@@ -125,6 +157,40 @@ def compute_derivatives(t, y, data):
     D = np.array([[data.d1, 0], [0, data.d2]])
     K = np.array([[data.k01, 0], [0, data.k02]])
     F = np.array([-data.g*(data.m1+data.m2)-Fext, -data.g*data.m2 - Fext])
+    z0 = np.array([data.z01, data.z02])
+    b = F + K@z0 - K@y[0:2] - D@y[2:4]
+    x = np.linalg.solve(A, b)
+
+    yd = np.zeros(4)
+    yd[0] = y[2]
+    yd[1] = y[3]
+    yd[2:4] = x
+
+    return yd
+
+def compute_derivatives_3(t, y, data):
+    """ Compute the derivatives yd for a given state y of the system with moving ground and no external force.
+        The derivatives are computed at the given time t with
+        the parameters values in the given data structure.
+        
+        It is assumed that the state vector y contains the following states:
+          y = [q1, q2, qd1, qd2] with:
+             - q1: the mass 1 position
+             - q2: the mass 2 position 
+             - qd1: the mass 1 velocity
+             - qd2: the mass 2 velocity 
+
+        :param  t: the time instant when to compute the derivatives.
+        :param  y: the numpy array containing the states 
+        :return: yd a numpy array containing the states derivatives  yd = [qd1, qd2, qdd1, qdd2]
+        :param data: the MBSData object containing the parameters of the model
+    """                 
+    # Two masses system
+    Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
+    A = np.array([[data.m1 + data.m2, data.m2], [data.m2, data.m2]])
+    D = np.array([[data.d1, 0], [0, data.d2]])
+    K = np.array([[data.k01, 0], [0, data.k02]])
+    F = np.array([-data.g*(data.m1+data.m2), -data.g*data.m2])
     z0 = np.array([data.z01, data.z02])
     b = F + K@z0 - K@y[0:2] - D@y[2:4]
     x = np.linalg.solve(A, b)
@@ -158,14 +224,14 @@ def compute_dynamic_response(data):
     # this fprime function can be provided to solve_ivp
     # Note that you can change the tolerances with rtol and atol options (see online solve_iv doc)
     #
-    fprime = lambda t,y: compute_derivatives(t, y, data)
+    fprime = lambda t,y: compute_derivatives_2(t, y, data)
     t_span = [data.t0, data.t1]
     y0 = [data.q1, data.q2, 0, 0]
     sol = solve_ivp(fprime, t_span, y0, t_eval=np.linspace(data.t0, data.t1, 1000), method='RK45')
 
     # Get ydd
     ydd = np.zeros((2, len(sol.t)))
-    for i in range(len(sol.t)): ydd[:,i] = compute_derivatives(sol.t[i], sol.y[:,i], data)[2:4]
+    for i in range(len(sol.t)): ydd[:,i] = compute_derivatives_2(sol.t[i], sol.y[:,i], data)[2:4]
 
     # Save the results into text files
     np.savetxt('dirdyn_q.res', np.vstack((sol.t, sol.y[0], sol.y[1])).T)

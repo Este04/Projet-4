@@ -97,7 +97,7 @@ def sweep(t, t0, f0, t1, f1, Fmax):
     return Fmax * sin(2*pi*t * (f0 + (f1-f0)/(t1-t0) * (t/2)))
     
 
-# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *    
+# * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 def compute_derivatives(t, y, data):
     """ Compute the derivatives yd for a given state y of the system.
         The derivatives are computed at the given time t with
@@ -119,7 +119,6 @@ def compute_derivatives(t, y, data):
     # TODO   
     # sweep function should be called here: sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
     Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
-
     yd = np.zeros(4)
     yd[0] = y[2]
     yd[1] = y[3]
@@ -127,14 +126,15 @@ def compute_derivatives(t, y, data):
     A = np.array([[data.m1 + data.m2, data.m2], [data.m2, data.m2]])
     D = np.array([[data.d1, 0], [0, data.d2]])
     K = np.array([[data.k01, 0], [0, data.k02]])
-    F = np.array([-data.g*(data.m1+data.m2), -data.g*data.m2 - Fext])
+    F = np.array([-data.g*(data.m1+data.m2)-Fext, -data.g*data.m2 - Fext])
     z0 = np.array([data.z01, data.z02])
 
-    b = F + K@z0 - K@y[0:2] - D@y[2:4] 
-    yd[2:4] = np.linalg.solve(A, B)
+    b = F + K@z0 - K@y[0:2] - D@y[2:4]
+    yd[2:4] = np.linalg.solve(A, b)
+
 
     return yd
-
+    
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -180,9 +180,9 @@ def compute_dynamic_response(data):
     # Plot the results
     plt.plot(sol.t, sol.y[0], label='q1')
     plt.plot(sol.t, sol.y[1], label='q2')
-
     plt.scatter(ref['t1'], ref['q1'], label='q1 ref', color='red')
     plt.scatter(ref['t2'], ref['q2'], label='q2 ref', color='green')
+    
     plt.legend()
     plt.xlabel('Time [s]')
     plt.ylabel('Displacement [m]')

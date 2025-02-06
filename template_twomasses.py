@@ -116,6 +116,7 @@ def compute_derivatives_1(t, y, data):
         :return: yd a numpy array containing the states derivatives  yd = [qd1, qd2, qdd1, qdd2]
         :param data: the MBSData object containing the parameters of the model
     """                 
+
     # Two masses system
     Fext = sweep(t, data.t0, data.f0, data.t1, data.f1, data.Fmax)
     A = np.array([[data.m1 + data.m2, data.m2], [data.m2, data.m2]])
@@ -201,7 +202,7 @@ def compute_derivatives_3(t, y, data):
     yd[2:4] = x
 
     return yd
-    
+
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -215,6 +216,7 @@ def compute_dynamic_response(data):
  
        :param data: the MBSData object containing the parameters of the model
      """
+
     # ### Runge Kutta ###   should be called via solve_ivp()
     # to pass the MBSData object to compute_derivative function in solve_ivp, you may use lambda mechanism:
     #
@@ -262,6 +264,7 @@ def plot(sol):
     plt.title('Displacement of the two masses')
     plt.grid()
     plt.show()
+
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
